@@ -1,0 +1,83 @@
+{
+    "name": "roaresearch/yii2-fulltext",
+    "description": "Yii 2 Library to support full text index and search",
+    "keywords": [
+        "yii2",
+        "framework",
+        "advanced",
+        "migration",
+        "migrate",
+        "fulltext",
+        "relational model database"
+    ],
+    "type": "library",
+    "license": "BSD-3-Clause",
+    "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
+    "extra": {
+        "utilConfig": {
+            "dbname": "yii2_fulltext_test",
+            "dbtpls": {
+                "tests/_app/config/db.local.php": "roaresearch\\composer\\utils\\Yii2DBTPL"
+            }
+        }
+    },
+    "require": {
+        "php": "~8.1",
+        "yiisoft/yii2": "~2.0.27"
+    },
+    "require-dev": {
+        "ext-mbstring": "*",
+        "codeception/codeception": "~5.0.0",
+        "codeception/module-asserts": "dev-master",
+        "codeception/module-yii2": "*",
+        "codeception/verify": "~1.2.0",
+        "roaresearch/composer-utils": "*",
+        "yiisoft/yii2-debug": "~2.1.0"
+    },
+    "scripts": {
+        "deploy": [
+            "@composer install",
+            "tests\\AutoloadListener::autoload",
+            "@config-db",
+            "@deploy-db",
+            "@run-tests"
+        ],
+        "config-db": "roaresearch\\composer\\utils\\DBListener::config",
+        "blank-db": "roaresearch\\composer\\utils\\DBListener::blankConfig",
+        "migrate": "tests/_app/yii.php migrate --interactive=0",
+        "deploy-db": [
+            "@composer migrate -- -p=@app/migrations"
+        ],
+        "run-tests": "vendor/bin/codecept run --steps",
+        "run-coverage": "@composer run-tests -- --coverage --coverage-xml"
+    },
+    "scripts-descriptions": {
+        "migrate": "shortcut to run a migration",
+        "deploy-tests": "Deploy the testing application",
+        "run-tests": "shortcut for `codecept run --steps`",
+        "run-coverage": "shortcut for `run-tests -- --coverage --coverage-xml"
+    },
+    "autoload": {
+        "psr-4": {
+            "roaresearch\\yii2\\rmdb\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "classmap": [
+            "tests/AutoloadListener.php"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "ergebnis/composer-normalize": true,
+            "phpro/grumphp": true
+        }
+    }
+}
