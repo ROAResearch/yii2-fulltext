@@ -15,7 +15,7 @@ or edit the `composer.json` file
 
 ```json
 require: {
-    "roareasearch/yii2-fulltext": "*",
+    "roaresearch/yii2-fulltext": "*",
 }
 ```
 
@@ -51,6 +51,82 @@ class m170101_000001_add_fulltext_article extends AddFullTextMigration
     }
 }
 ```
+
+### Create Query
+
+To ease the creation of the SQL expression required for the full text search the
+static method `MatchAgainstExpression::matchAgainst()` can be used.
+
+```php
+use roaresearch\yii2\fullText\MatchAgainstExpression as MA;
+
+$query = Article::find()
+    ->andWhere(
+        MA::matchAgainst(['title', 'body'], $text)
+    );
+```
+
+> Tip: put the full text filter at the very end to optimize the query.
+
+MySQL will naturally order the results based on the full text filter IN MOST
+CASES when the ORDER BY part is omited. Still there are exceptions and for that
+
+```php
+use roaresearch\yii2\fullText\MatchAgainstExpression as MA;
+
+$ma = MA::matchAgainst(['title', 'body'], $text);
+$query = Article::find()
+    ->addSelect(['relevance' => $ma])
+    ->andWhere($ma)
+    ->orderBy(['relevance' => SORT_DESC]);
+```
+
+> Tip dont forget to add all the needed columns on the select.
+> Tip although it looks like it runs the full text search twice it doesnt since
+  internally query parameters are used.
+
+### Search Mode
+
+MySQL supports 3 modes when performing an SQL statement and they are supported
+using `ModeEnum`, to make in human understandable names.
+
+They can be used like this
+
+```php
+use roaresearch\yii2\fullText\{MatchAgainstExpression as MA, ModeEnum};
+
+MA::matchAgainst(['title', 'body'], $text, ModeEnum::Nat);
+MA::matchAgainst(['title', 'body'], $text, ModeEnum::Sym);
+MA::matchAgainst(['title', 'body'], $text, ModeEnum::Dbl);
+
+```
+
+#### ModeEnum::Nat
+
+Its the default or natural mode which is the closest to the human language.
+
+Doesnt support symbol operators, cant catch typos or related terms.
+
+Example: 'mysql' any result that includes the word 'mysql'.
+
+#### ModeENum::Sym
+
+The mysql documentation call this mode `boolean` but there is nothing boolean
+about it so I will call it symbolic since it allows symbol operators.
+
+Doesnt catch typos or related terms
+
+Example: 'mysql -oracle' result must include 'mysql' but not contain 'oracle'
+
+#### ModeEnum::Dbl
+
+Internally is called query expansion but doesnt expand anything so I call it
+double since it runs the search twice to find related terms and fix typos.
+
+Doesnt support symbolic operators.
+
+Example: 'database' would return anything related to databases like 'mysql'
+and 'oracle' even if they dont contain the word 'database'.
 
 #### Testing Environment
 
